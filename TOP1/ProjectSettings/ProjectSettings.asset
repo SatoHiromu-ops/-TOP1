@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 28
-  productGUID: c602ae0ba9fcec848bace1b09878abec
+  productGUID: 032d7fac613a06848a6158877ad22b87
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: "\u30B9\u30ED\u30C3\u30C8\u3069\u308A\u3061\u30FC"
+  productName: TOP1
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -846,14 +846,14 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: "\u30B9\u30ED\u30C3\u30C8\u3069\u308A\u3061\u30FC"
+  metroPackageName: TOP1
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: "\u30B9\u30ED\u30C3\u30C8\u3069\u308A\u3061\u30FC"
+  metroApplicationDescription: TOP1
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -924,10 +924,10 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: 03ecd66e-cbf0-44e2-b8dc-3abfda187810
+  cloudProjectId: ea1b627d-bdfc-42d2-871f-bdb957634469
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: "\u30B9\u30ED\u30C3\u30C8\u3069\u308A\u3061\u30FC"
+  projectName: TOP1
   organizationId: satohiroi
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
