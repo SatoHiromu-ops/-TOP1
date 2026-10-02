@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static UnityEditor.Progress;
 
 public class player : MonoBehaviour
 {
@@ -8,6 +9,10 @@ public class player : MonoBehaviour
 
     private Rigidbody rb;
     private Transform cameraTransform;
+
+    [Header("アイテム取得")]
+    public float pickupDistance = 5f;
+    private Item currentLookItem;
 
     void Start()
     {
@@ -41,21 +46,16 @@ public class player : MonoBehaviour
                 input.y += 1f;
         }
 
-        // 入力がない場合
         if (input.sqrMagnitude < 0.01f)
             return;
 
         // カメラの前方向
         Vector3 cameraForward = cameraTransform.forward;
-
-        // 上下方向を無視する
         cameraForward.y = 0f;
         cameraForward.Normalize();
 
         // カメラの右方向
         Vector3 cameraRight = cameraTransform.right;
-
-        // 上下方向を無視する
         cameraRight.y = 0f;
         cameraRight.Normalize();
 
@@ -64,7 +64,6 @@ public class player : MonoBehaviour
             cameraForward * input.y +
             cameraRight * input.x;
 
-        // 斜め移動が速くならないようにする
         movement = Vector3.ClampMagnitude(movement, 1f);
 
         // Playerを移動
@@ -84,5 +83,63 @@ public class player : MonoBehaviour
                 rotationSpeed * Time.fixedDeltaTime
             )
         );
+    }
+
+    // Fキーでアイテムを拾う
+    void Update()
+    {
+        Item lookedItem = GetLookedItem();
+
+        // 前に見ていたアイテム
+        if (currentLookItem != null &&
+            currentLookItem != lookedItem)
+        {
+            currentLookItem.SetHighlight(false);
+        }
+
+        // 今見ているアイテム
+        if (lookedItem != null)
+        {
+            lookedItem.SetHighlight(true);
+        }
+
+        currentLookItem = lookedItem;
+
+        // Fキーで拾う
+        if (Keyboard.current != null &&
+            Keyboard.current.fKey.wasPressedThisFrame)
+        {
+            if (currentLookItem != null)
+            {
+                currentLookItem.Pickup();
+                currentLookItem = null;
+            }
+        }
+    }
+
+    Item GetLookedItem()
+    {
+        // カメラの中心からRayを飛ばす
+        Ray ray = new Ray(
+            cameraTransform.position,
+            cameraTransform.forward
+        );
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(
+            ray,
+            out hit,
+            pickupDistance))
+        {
+            Item item = hit.collider.GetComponent<Item>();
+
+            if (item != null)
+            {
+                return item;
+            }
+        }
+
+        return null;
     }
 }
