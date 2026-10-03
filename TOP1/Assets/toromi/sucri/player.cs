@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static UnityEditor.Progress;
 
 public class player : MonoBehaviour
 {
@@ -13,6 +12,14 @@ public class player : MonoBehaviour
     [Header("アイテム取得")]
     public float pickupDistance = 5f;
     private Item currentLookItem;
+    public Transform holdPoint;
+
+    [Header("懐中電灯")]
+    public GameObject flashlight;
+    public Light flashlightLight;
+
+    private bool flashlightIsHeld = false;
+    private bool flashlightIsOn = false;
 
     void Start()
     {
@@ -24,6 +31,12 @@ public class player : MonoBehaviour
 
         // Main Cameraを取得
         cameraTransform = Camera.main.transform;
+
+        // 最初は懐中電灯をしまっておく
+        flashlight.SetActive(false);
+
+        // 最初はライトOFF
+        flashlightLight.enabled = false;
     }
 
     void FixedUpdate()
@@ -85,61 +98,74 @@ public class player : MonoBehaviour
         );
     }
 
-    // Fキーでアイテムを拾う
     void Update()
     {
-        Item lookedItem = GetLookedItem();
-
-        // 前に見ていたアイテム
-        if (currentLookItem != null &&
-            currentLookItem != lookedItem)
-        {
-            currentLookItem.SetHighlight(false);
-        }
-
-        // 今見ているアイテム
-        if (lookedItem != null)
-        {
-            lookedItem.SetHighlight(true);
-        }
-
-        currentLookItem = lookedItem;
-
-        // Fキーで拾う
+        // =========================
+        // Eキー：懐中電灯を出す・しまう
+        // =========================
         if (Keyboard.current != null &&
-            Keyboard.current.fKey.wasPressedThisFrame)
+            Keyboard.current.eKey.wasPressedThisFrame)
         {
-            if (currentLookItem != null)
-            {
-                currentLookItem.Pickup();
-                currentLookItem = null;
-            }
+            ToggleFlashlight();
+        }
+
+        // =========================
+        // 右クリック：ライトON/OFF
+        // =========================
+        if (Mouse.current != null &&
+            Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            ToggleFlashlightLight();
         }
     }
 
-    Item GetLookedItem()
+    // ========================================
+    // 懐中電灯を出す / しまう
+    // ========================================
+    void ToggleFlashlight()
     {
-        // カメラの中心からRayを飛ばす
-        Ray ray = new Ray(
-            cameraTransform.position,
-            cameraTransform.forward
-        );
+        flashlightIsHeld = !flashlightIsHeld;
 
-        RaycastHit hit;
-
-        if (Physics.Raycast(
-            ray,
-            out hit,
-            pickupDistance))
+        if (flashlightIsHeld)
         {
-            Item item = hit.collider.GetComponent<Item>();
+            // 懐中電灯を表示
+            flashlight.SetActive(true);
 
-            if (item != null)
-            {
-                return item;
-            }
+            // 手の位置にする
+            flashlight.transform.SetParent(holdPoint);
+
+            flashlight.transform.localPosition = Vector3.zero;
+            flashlight.transform.localRotation = Quaternion.identity;
+
+            // 最初はライトOFF
+            flashlightIsOn = false;
+            flashlightLight.enabled = false;
         }
+        else
+        {
+            // ライトをOFF
+            flashlightIsOn = false;
+            flashlightLight.enabled = false;
 
-        return null;
+            // 懐中電灯を非表示
+            flashlight.SetActive(false);
+
+            // 親から外す
+            flashlight.transform.SetParent(null);
+        }
+    }
+
+    // ========================================
+    // 懐中電灯のライトON / OFF
+    // ========================================
+    void ToggleFlashlightLight()
+    {
+        // 懐中電灯を持っていないなら何もしない
+        if (!flashlightIsHeld)
+            return;
+
+        flashlightIsOn = !flashlightIsOn;
+
+        flashlightLight.enabled = flashlightIsOn;
     }
 }
