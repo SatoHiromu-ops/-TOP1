@@ -12,14 +12,18 @@ public class player : MonoBehaviour
     [Header("アイテム取得")]
     public float pickupDistance = 5f;
     private Item currentLookItem;
-    public Transform holdPoint;
+    
 
     [Header("懐中電灯")]
     public GameObject flashlight;
-    public Light flashlightLight;
+    public Transform holdPoint;
+
+    [Header("Playerの光源")]
+    public Light playerLight;
 
     private bool flashlightIsHeld = false;
     private bool flashlightIsOn = false;
+
 
     void Start()
     {
@@ -34,9 +38,19 @@ public class player : MonoBehaviour
 
         // 最初は懐中電灯をしまっておく
         flashlight.SetActive(false);
+        // 光源は最初OFF
+        if (playerLight != null)
+        {
+            playerLight.enabled = false;
+        }
 
-        // 最初はライトOFF
-        flashlightLight.enabled = false;
+        flashlightIsOn = false;
+
+        playerLight.transform.SetParent(cameraTransform, false);
+        playerLight.transform.localPosition = new Vector3(0f, 0f, 0.3f);
+        playerLight.transform.localRotation = Quaternion.identity;
+
+
     }
 
     void FixedUpdate()
@@ -84,18 +98,23 @@ public class player : MonoBehaviour
             rb.position + movement * speed * Time.fixedDeltaTime;
 
         rb.MovePosition(newPosition);
+        // カメラの向いている水平方向を向く
+        Vector3 lookDirection = cameraTransform.forward;
+        lookDirection.y = 0f;
 
-        // 移動方向を向く
-        Quaternion targetRotation =
-            Quaternion.LookRotation(movement);
+        if (lookDirection.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRotation =
+                Quaternion.LookRotation(lookDirection);
 
-        rb.MoveRotation(
-            Quaternion.Slerp(
-                rb.rotation,
-                targetRotation,
-                rotationSpeed * Time.fixedDeltaTime
-            )
-        );
+            rb.MoveRotation(
+                Quaternion.Slerp(
+                    rb.rotation,
+                    targetRotation,
+                    rotationSpeed * Time.fixedDeltaTime
+                )
+            );
+        }
     }
 
     void Update()
@@ -128,29 +147,24 @@ public class player : MonoBehaviour
 
         if (flashlightIsHeld)
         {
-            // 懐中電灯を表示
-            flashlight.SetActive(true);
-
-            // 手の位置にする
-            flashlight.transform.SetParent(holdPoint);
-
+            // 懐中電灯モデルを手元に表示
+            flashlight.transform.SetParent(holdPoint, false);
             flashlight.transform.localPosition = Vector3.zero;
             flashlight.transform.localRotation = Quaternion.identity;
+            flashlight.SetActive(true);
 
-            // 最初はライトOFF
+            // 持った直後は光をOFF
             flashlightIsOn = false;
-            flashlightLight.enabled = false;
+            playerLight.enabled = false;
         }
         else
         {
-            // ライトをOFF
+            // 光をOFF
             flashlightIsOn = false;
-            flashlightLight.enabled = false;
+            playerLight.enabled = false;
 
-            // 懐中電灯を非表示
+            // 懐中電灯モデルをしまう
             flashlight.SetActive(false);
-
-            // 親から外す
             flashlight.transform.SetParent(null);
         }
     }
@@ -160,12 +174,13 @@ public class player : MonoBehaviour
     // ========================================
     void ToggleFlashlightLight()
     {
-        // 懐中電灯を持っていないなら何もしない
+        // 懐中電灯を持っていない場合は何もしない
         if (!flashlightIsHeld)
             return;
 
         flashlightIsOn = !flashlightIsOn;
 
-        flashlightLight.enabled = flashlightIsOn;
+        // 懐中電灯モデルではなくPlayer側の光源を切り替える
+        playerLight.enabled = flashlightIsOn;
     }
 }
