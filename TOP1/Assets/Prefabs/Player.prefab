@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -7.5, y: 1.22, z: 0.35}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 0.8, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -131,9 +131,9 @@ MonoBehaviour:
   speed: 5
   rotationSpeed: 10
   pickupDistance: 5
-  holdPoint: {fileID: 0}
   flashlight: {fileID: 0}
-  flashlightLight: {fileID: 10800000, guid: 7c4cfd35d7e78fb44a0f5522e37c35b1, type: 3}
+  holdPoint: {fileID: 0}
+  playerLight: {fileID: 0}
 --- !u!54 &6001431344589128505
 Rigidbody:
   m_ObjectHideFlags: 0
