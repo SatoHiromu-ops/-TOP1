@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,6 +19,9 @@ public class CameraFollow : MonoBehaviour
     private float horizontalAngle = 0f;
     private float verticalAngle = 20f;
 
+    // カメラ操作が有効かどうか
+    private bool isFollowing = true;
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -26,6 +30,10 @@ public class CameraFollow : MonoBehaviour
 
     void Update()
     {
+        // 停止中はマウス入力を受け付けない
+        if (!isFollowing)
+            return;
+
         // マウス入力
         Vector2 mouseInput = Vector2.zero;
 
@@ -50,6 +58,10 @@ public class CameraFollow : MonoBehaviour
 
     void LateUpdate()
     {
+        // 停止中はカメラの位置・回転を変更しない
+        if (!isFollowing)
+            return;
+
         if (target == null)
             return;
 
@@ -70,5 +82,15 @@ public class CameraFollow : MonoBehaviour
 
         // カメラを回転
         transform.rotation = rotation;
+    }
+
+    // タイムアップ時に呼び出す
+    public void StopFollowing()
+    {
+        isFollowing = false;
+
+        // マウスカーソルを表示してロック解除
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
