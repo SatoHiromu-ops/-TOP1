@@ -1,89 +1,191 @@
-using UnityEngine;
 
+using UnityEngine;
+using UnityEngine.AI;
+
+[RequireComponent(typeof(NavMeshAgent))]
 public class Enemy : MonoBehaviour
 {
     [Header("移動設定")]
     [SerializeField] private float moveSpeed = 3f;
+    [SerializeField] private float rotationSpeed = 360f;
+
+    [Header("自由移動設定")]
+    [SerializeField] private float wanderRadius = 10f;
+    [SerializeField] private float wanderInterval = 3f;
 
     [Header("索敵設定")]
-    [SerializeField] private float searchRange = 5f;  // 索敵距離
-    [SerializeField] private float searchAngle = 90f; // 索敵角度
+    [SerializeField] private float searchRange = 5f;
+    [SerializeField] private float searchAngle = 90f;
 
     private Transform player;
+    private NavMeshAgent agent;
+
+    private bool isChasing = false;
+    private float wanderTimer = 0f;
 
     void Start()
     {
-        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        agent = GetComponent<NavMeshAgent>();
+
+        // 回転は自分で制御する
+        agent.updateRotation = false;
+        agent.updateUpAxis = true;
+
+        agent.speed = moveSpeed;
+        agent.angularSpeed = rotationSpeed;
+        agent.isStopped = false;
+
+        GameObject playerObject =
+            GameObject.FindGameObjectWithTag("Player");
 
         if (playerObject != null)
         {
             player = playerObject.transform;
         }
+
+        SetRandomDestination();
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (agent == null || !agent.isOnNavMesh)
+            return;
 
-        // プレイヤーへの方向と距離を取得
-        Vector3 direction = player.position - transform.position;
-        float distance = direction.magnitude;
-
-        // 索敵範囲内かチェック
-        if (distance <= searchRange)
+        // プレイヤーを発見するまでは索敵する
+        if (!isChasing)
         {
-            // 敵の前方とプレイヤーの方向の角度を取得
-            float angle = Vector3.Angle(transform.forward, direction);
+            SearchForPlayer();
 
-            // 索敵角度内にプレイヤーがいる場合、追いかける
-            if (angle <= searchAngle / 2f)
+            if (!isChasing)
             {
-                Vector3 moveDirection = direction.normalized;
+                wanderTimer += Time.deltaTime;
 
-                transform.position +=
-                    moveDirection * moveSpeed * Time.deltaTime;
+                // 移動先に到着したら次の目的地を設定
+                if (!agent.pathPending &&
+                    (!agent.hasPath ||
+                     agent.remainingDistance <=
+                     agent.stoppingDistance + 0.2f))
+                {
+                    if (wanderTimer >= wanderInterval)
+                    {
+                        SetRandomDestination();
+                    }
+                }
+
+                // 次の目的地を探す時間が過ぎた場合も再試行
+                if (wanderTimer >= wanderInterval)
+                {
+                    SetRandomDestination();
+                }
+
+                return;
             }
+        }
+
+        // 発見したらプレイヤーを追い続ける
+        if (player != null)
+        {
+            agent.isStopped = false;
+            agent.SetDestination(player.position);
         }
     }
 
-    // 索敵範囲をSceneビューに表示
-    void OnDrawGizmosSelected()
+    void LateUpdate()
     {
-        // 索敵範囲の色（半透明の黄色）
-        Gizmos.color = new Color(1f, 1f, 0f, 0.25f);
+        if (agent == null || !agent.isOnNavMesh)
+            return;
 
-        int segments = 30;
-        float halfAngle = searchAngle / 2f;
+        // NavMeshAgent の実際の移動方向を取得
+        Vector3 direction = agent.velocity;
+        direction.y = 0f;
 
-        Vector3 origin = transform.position;
-
-        // 扇形の中心方向
-        Vector3 forward = transform.forward;
-
-        // 扇形の三角形を描画
-        for (int i = 0; i < segments; i++)
+        // 移動中のみ回転させる
+        if (direction.sqrMagnitude > 0.01f)
         {
-            float angle1 = -halfAngle + searchAngle * i / segments;
-            float angle2 = -halfAngle + searchAngle * (i + 1) / segments;
+            Quaternion targetRotation =
+                Quaternion.LookRotation(
+                    direction.normalized,
+                    Vector3.up
+                );
 
-            Vector3 dir1 = Quaternion.Euler(0f, angle1, 0f) * forward;
-            Vector3 dir2 = Quaternion.Euler(0f, angle2, 0f) * forward;
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRotation,
+                rotationSpeed * Time.deltaTime
+            );
+        }
+    }
 
-            Vector3 p1 = origin + dir1 * searchRange;
-            Vector3 p2 = origin + dir2 * searchRange;
+    void SearchForPlayer()
+    {
+        if (player == null)
+            return;
 
-            Gizmos.DrawLine(origin, p1);
-            Gizmos.DrawLine(p1, p2);
-            Gizmos.DrawLine(p2, origin);
+        Vector3 direction = player.position - transform.position;
+        float distance = direction.magnitude;
+
+        if (distance > searchRange)
+            return;
+
+        // 水平方向で索敵角度を判定
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.001f)
+            return;
+
+        float angle = Vector3.Angle(
+            transform.forward,
+            direction
+        );
+
+        if (angle <= searchAngle / 2f)
+        {
+            isChasing = true;
+        }
+    }
+
+    void SetRandomDestination()
+    {
+        if (agent == null || !agent.isOnNavMesh)
+            return;
+
+        for (int i = 0; i < 20; i++)
+        {
+            Vector3 randomPosition =
+                transform.position +
+                Random.insideUnitSphere * wanderRadius;
+
+            if (NavMesh.SamplePosition(
+                randomPosition,
+                out NavMeshHit hit,
+                wanderRadius,
+                NavMesh.AllAreas))
+            {
+                NavMeshPath path = new NavMeshPath();
+
+                if (agent.CalculatePath(hit.position, path) &&
+                    path.status == NavMeshPathStatus.PathComplete)
+                {
+                    agent.isStopped = false;
+                    agent.SetDestination(hit.position);
+                    wanderTimer = 0f;
+                    return;
+                }
+            }
         }
 
-        // 索敵範囲の外周を赤色で表示
-        Gizmos.color = Color.red;
+        // 移動先が見つからなければ、次の Update で再試行
+        wanderTimer = 0f;
+    }
 
-        Vector3 left = Quaternion.Euler(0f, -halfAngle, 0f) * forward;
-        Vector3 right = Quaternion.Euler(0f, halfAngle, 0f) * forward;
+    void OnDrawGizmosSelected()
+    {
+        // 索敵距離
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, searchRange);
 
-        Gizmos.DrawRay(origin, left * searchRange);
-        Gizmos.DrawRay(origin, right * searchRange);
+        // 自由移動範囲
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, wanderRadius);
     }
 }
