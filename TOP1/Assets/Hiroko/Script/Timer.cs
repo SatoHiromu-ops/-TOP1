@@ -1,8 +1,6 @@
 
-
-
-
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class Timer : MonoBehaviour
@@ -16,11 +14,14 @@ public class Timer : MonoBehaviour
     [Header("プレイヤー操作スクリプト")]
     public MonoBehaviour[] playerControls;
 
-    [Header("カメラ追従スクリプト")]
+    [Header("カメラ")]
     public CameraFollow cameraFollow;
 
     [Header("制限時間（秒）")]
     public float timeLimit = 180f;
+
+    [Header("タイトルシーン名")]
+    public string titleSceneName = "TitleScene";
 
     private float timeRemaining;
     private bool isRunning = true;
@@ -28,11 +29,16 @@ public class Timer : MonoBehaviour
     void Start()
     {
         timeRemaining = timeLimit;
+        isRunning = true;
 
+        // ゲームオーバー画面を非表示
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(false);
         }
+
+        // タイムスケールを通常に戻す
+        Time.timeScale = 1f;
 
         UpdateTimerText();
     }
@@ -40,9 +46,7 @@ public class Timer : MonoBehaviour
     void Update()
     {
         if (!isRunning)
-        {
             return;
-        }
 
         timeRemaining -= Time.deltaTime;
         timeRemaining = Mathf.Max(0f, timeRemaining);
@@ -58,9 +62,7 @@ public class Timer : MonoBehaviour
     void UpdateTimerText()
     {
         if (timerText == null)
-        {
             return;
-        }
 
         int minutes = Mathf.FloorToInt(timeRemaining / 60f);
         int seconds = Mathf.FloorToInt(timeRemaining % 60f);
@@ -71,14 +73,9 @@ public class Timer : MonoBehaviour
     void GameOver()
     {
         if (!isRunning)
-        {
             return;
-        }
 
-        // タイマー停止
         isRunning = false;
-
-        // 時間を00:00に固定
         timeRemaining = 0f;
         UpdateTimerText();
 
@@ -91,7 +88,7 @@ public class Timer : MonoBehaviour
             }
         }
 
-        // カメラの追従を停止
+        // カメラ操作を停止
         if (cameraFollow != null)
         {
             cameraFollow.StopFollowing();
@@ -104,5 +101,23 @@ public class Timer : MonoBehaviour
         }
 
         Debug.Log("GAME OVER!");
+    }
+
+    // 再挑戦ボタン
+    public void RestartGame()
+    {
+        Time.timeScale = 1f;
+
+        SceneManager.LoadScene(
+            SceneManager.GetActiveScene().buildIndex
+        );
+    }
+
+    // タイトルに戻るボタン
+    public void GoToTitle()
+    {
+        Time.timeScale = 1f;
+
+        SceneManager.LoadScene(titleSceneName);
     }
 }
