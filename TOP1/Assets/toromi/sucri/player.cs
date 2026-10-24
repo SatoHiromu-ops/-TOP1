@@ -119,6 +119,7 @@ public class player : MonoBehaviour
 
     void Update()
     {
+        CheckLookItem();
         // =========================
         // Eキー：懐中電灯を出す・しまう
         // =========================
@@ -135,6 +136,12 @@ public class player : MonoBehaviour
             Mouse.current.rightButton.wasPressedThisFrame)
         {
             ToggleFlashlightLight();
+        }
+        // Fキー：アイテムを拾う
+        if (Keyboard.current != null &&
+            Keyboard.current.fKey.wasPressedThisFrame)
+        {
+            TryPickupItem();
         }
     }
 
@@ -182,5 +189,49 @@ public class player : MonoBehaviour
 
         // 懐中電灯モデルではなくPlayer側の光源を切り替える
         playerLight.enabled = flashlightIsOn;
+    }
+    // ========================================
+    // Fキー：アイテムを拾う
+    // ========================================
+    void TryPickupItem()
+    {
+        if (currentLookItem == null)
+            return;
+
+        Item item = currentLookItem;
+        currentLookItem = null;
+
+        item.Pickup();
+    }
+    void CheckLookItem()
+    {
+        Item foundItem = null;
+
+        if (cameraTransform != null)
+        {
+            Ray ray = new Ray(
+                cameraTransform.position,
+                cameraTransform.forward
+            );
+
+            if (Physics.Raycast(ray, out RaycastHit hit, pickupDistance))
+            {
+                foundItem = hit.collider.GetComponentInParent<Item>();
+            }
+        }
+
+        // 前に見ていたアイテムの強調表示を解除
+        if (currentLookItem != null && currentLookItem != foundItem)
+        {
+            currentLookItem.SetHighlight(false);
+        }
+
+        // 新しく見ているアイテムを黄色にする
+        currentLookItem = foundItem;
+
+        if (currentLookItem != null)
+        {
+            currentLookItem.SetHighlight(true);
+        }
     }
 }
