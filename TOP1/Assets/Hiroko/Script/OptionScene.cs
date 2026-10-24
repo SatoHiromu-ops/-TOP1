@@ -1,16 +1,10 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class OptionScene : MonoBehaviour
+public class OptionButton : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public void GoToOptionScene()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        SceneManager.LoadScene("Option");
     }
 }
