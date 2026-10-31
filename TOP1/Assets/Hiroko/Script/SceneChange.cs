@@ -5,6 +5,6 @@ public class SceneChange : MonoBehaviour
 {
     public void GoToGame()
     {
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("Rule");
     }
 }
