@@ -10,7 +10,7 @@ public class BGMManager : MonoBehaviour
     {
         if (Instance == null)
         {
-            Instance = this;
+            Instance = this; 
             DontDestroyOnLoad(gameObject);
         }
         else
@@ -30,7 +30,7 @@ public class BGMManager : MonoBehaviour
     {
         audioSource.volume = volume;
 
-        // âπó Çï€ë∂Ç∑ÇÈ
+        // âπó Çï€ë∂Ç∑ÇÈ âπó ä«óù
         PlayerPrefs.SetFloat("BGMVolume", volume);
     }
 }
