@@ -188,4 +188,11 @@ public class Enemy : MonoBehaviour
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, wanderRadius);
     }
+    void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            Destroy(collision.gameObject);
+        }
+    }
 }
