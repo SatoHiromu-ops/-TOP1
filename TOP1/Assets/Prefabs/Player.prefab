@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6133964669911855648}
   - component: {fileID: 5638795799933445227}
   - component: {fileID: 6001431344589128505}
+  - component: {fileID: 2985197076528796154}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -161,3 +162,16 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &2985197076528796154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1629439299091847974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77a0994e3dedd7a4e806896d5efeee2f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
+  pickupHint: {fileID: 0}
