@@ -1,5 +1,7 @@
+
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class player : MonoBehaviour
 {
@@ -9,10 +11,21 @@ public class player : MonoBehaviour
     private Rigidbody rb;
     private Transform cameraTransform;
 
+    [Header("ダッシュ設定")]
+    public float dashSpeed = 10f;
+
+    [Header("スタミナ設定")]
+    public float maxStamina = 100f;
+    public float stamina = 100f;
+    public float staminaUseRate = 25f;
+    public float staminaRecoveryRate = 15f;
+
+    [Header("スタミナゲージ")]
+    public Slider staminaSlider;
+
     [Header("アイテム取得")]
     public float pickupDistance = 5f;
     private Item currentLookItem;
-    
 
     [Header("懐中電灯")]
     public GameObject flashlight;
@@ -29,16 +42,13 @@ public class player : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
 
-        // Playerが横転しないようにする
         rb.constraints = RigidbodyConstraints.FreezeRotationX |
                          RigidbodyConstraints.FreezeRotationZ;
 
-        // Main Cameraを取得
         cameraTransform = Camera.main.transform;
 
-        // 最初は懐中電灯をしまっておく
         flashlight.SetActive(false);
-        // 光源は最初OFF
+
         if (playerLight != null)
         {
             playerLight.enabled = false;
@@ -50,7 +60,14 @@ public class player : MonoBehaviour
         playerLight.transform.localPosition = new Vector3(0f, 0f, 0.3f);
         playerLight.transform.localRotation = Quaternion.identity;
 
+        // スタミナ初期化
+        stamina = maxStamina;
 
+        if (staminaSlider != null)
+        {
+            staminaSlider.maxValue = maxStamina;
+            staminaSlider.value = stamina;
+        }
     }
 
     void FixedUpdate()
@@ -73,6 +90,45 @@ public class player : MonoBehaviour
                 input.y += 1f;
         }
 
+        // ダッシュ判定
+        // ダッシュ判定
+        // ダッシュ判定
+        bool isDashing =
+            Keyboard.current != null &&
+            Keyboard.current.leftShiftKey.isPressed &&
+            stamina > 0f &&
+            input.sqrMagnitude > 0.01f;
+
+        // 移動速度
+        float currentSpeed = speed;
+
+        if (isDashing)
+        {
+            currentSpeed = dashSpeed;
+
+            stamina -= staminaUseRate * Time.fixedDeltaTime;
+
+            // 0以下になったら即座に通常速度に戻す
+            if (stamina <= 0f)
+            {
+                stamina = 0f;
+                currentSpeed = speed;
+            }
+        }
+        else
+        {
+            stamina += staminaRecoveryRate * Time.fixedDeltaTime;
+        }
+
+        // スタミナ制限
+        stamina = Mathf.Clamp(stamina, 0f, maxStamina);
+
+        // ゲージ更新
+        if (staminaSlider != null)
+        {
+            staminaSlider.value = stamina;
+        }
+
         if (input.sqrMagnitude < 0.01f)
             return;
 
@@ -93,11 +149,12 @@ public class player : MonoBehaviour
 
         movement = Vector3.ClampMagnitude(movement, 1f);
 
-        // Playerを移動
+        // Playerを移動（ダッシュ対応）
         Vector3 newPosition =
-            rb.position + movement * speed * Time.fixedDeltaTime;
+            rb.position + movement * currentSpeed * Time.fixedDeltaTime;
 
         rb.MovePosition(newPosition);
+
         // カメラの向いている水平方向を向く
         Vector3 lookDirection = cameraTransform.forward;
         lookDirection.y = 0f;
@@ -120,23 +177,21 @@ public class player : MonoBehaviour
     void Update()
     {
         CheckLookItem();
-        // =========================
+
         // Eキー：懐中電灯を出す・しまう
-        // =========================
         if (Keyboard.current != null &&
             Keyboard.current.eKey.wasPressedThisFrame)
         {
             ToggleFlashlight();
         }
 
-        // =========================
         // 右クリック：ライトON/OFF
-        // =========================
         if (Mouse.current != null &&
             Mouse.current.rightButton.wasPressedThisFrame)
         {
             ToggleFlashlightLight();
         }
+
         // Fキー：アイテムを拾う
         if (Keyboard.current != null &&
             Keyboard.current.fKey.wasPressedThisFrame)
@@ -145,54 +200,42 @@ public class player : MonoBehaviour
         }
     }
 
-    // ========================================
     // 懐中電灯を出す / しまう
-    // ========================================
     void ToggleFlashlight()
     {
         flashlightIsHeld = !flashlightIsHeld;
 
         if (flashlightIsHeld)
         {
-            // 懐中電灯モデルを手元に表示
             flashlight.transform.SetParent(holdPoint, false);
             flashlight.transform.localPosition = Vector3.zero;
             flashlight.transform.localRotation = Quaternion.identity;
             flashlight.SetActive(true);
 
-            // 持った直後は光をOFF
             flashlightIsOn = false;
             playerLight.enabled = false;
         }
         else
         {
-            // 光をOFF
             flashlightIsOn = false;
             playerLight.enabled = false;
 
-            // 懐中電灯モデルをしまう
             flashlight.SetActive(false);
             flashlight.transform.SetParent(null);
         }
     }
 
-    // ========================================
     // 懐中電灯のライトON / OFF
-    // ========================================
     void ToggleFlashlightLight()
     {
-        // 懐中電灯を持っていない場合は何もしない
         if (!flashlightIsHeld)
             return;
 
         flashlightIsOn = !flashlightIsOn;
-
-        // 懐中電灯モデルではなくPlayer側の光源を切り替える
         playerLight.enabled = flashlightIsOn;
     }
-    // ========================================
+
     // Fキー：アイテムを拾う
-    // ========================================
     void TryPickupItem()
     {
         if (currentLookItem == null)
@@ -203,6 +246,7 @@ public class player : MonoBehaviour
 
         item.Pickup();
     }
+
     void CheckLookItem()
     {
         Item foundItem = null;
@@ -220,13 +264,11 @@ public class player : MonoBehaviour
             }
         }
 
-        // 前に見ていたアイテムの強調表示を解除
         if (currentLookItem != null && currentLookItem != foundItem)
         {
             currentLookItem.SetHighlight(false);
         }
 
-        // 新しく見ているアイテムを黄色にする
         currentLookItem = foundItem;
 
         if (currentLookItem != null)
