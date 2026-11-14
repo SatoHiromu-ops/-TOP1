@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d5cbb1dc707b0b448b2e2dc2832be3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Item
-  itemPanel: {fileID: 0}
+  itemPanel: {fileID: 1487693038713547730, guid: 21d15f3ccc6201a48bf25763bf68f857, type: 3}
 --- !u!54 &4753415533348038628
 Rigidbody:
   m_ObjectHideFlags: 0
